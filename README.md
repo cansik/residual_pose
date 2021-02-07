@@ -76,9 +76,9 @@ which will save visualizations and results `on output_dir`.
 
 To run the realsense realtime inferencing demo run the following
 
-``̀`
+```
 python realsense-realtime-demo.py --config_file config/itop_config_file.json
-``̀`
+```
 
 which was not implemented by the original authors but by [cansik](https://github.com/cansik/residual_pose).
 No good results (and only 4 FPS) because a specific configuration file is missing.
