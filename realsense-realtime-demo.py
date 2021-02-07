@@ -17,7 +17,6 @@
 # along with ResidualPose. If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-import os
 import time
 
 import numpy as np
@@ -205,10 +204,13 @@ if __name__ == "__main__":
     torso_id = 1  ## id of torso limb
 
     #### create realsense pipeline
+    print("starting realsense camera...")
     pipeline = rs.pipeline()
 
     rs_config = rs.config()
     rs_config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+
+    dec_filter = rs.decimation_filter()
 
     profile = pipeline.start(rs_config)
 
@@ -221,6 +223,9 @@ if __name__ == "__main__":
 
             if not depth_frame:
                 continue
+
+            # enable to decimate input image
+            # depth_frame = dec_filter.process(depth_frame)
 
             img_depth = np.asanyarray(depth_frame.get_data())
             img_depth = img_depth / 1000.0  # Transforming into meters
@@ -250,7 +255,7 @@ if __name__ == "__main__":
             #######################################################
             ### Step (3) recover missing detections with pose prior
             #######################################################
-            img_color_ = img_color.copy() # todo: necessary?
+            # img_color_ = img_color.copy() # todo: necessary?
 
             for det in detections:
                 path = "Torso"
@@ -281,8 +286,8 @@ if __name__ == "__main__":
                 n_keypoints /= z
                 n_keypoints = np.transpose(np.around(n_keypoints))
 
-                Utils.draw_keypoints(img_color_, n_keypoints)
-                Utils.draw_limbs(img_color_, n_keypoints, skeleton_limbs)
+                # Utils.draw_keypoints(img_color_, n_keypoints)
+                # Utils.draw_limbs(img_color_, n_keypoints, skeleton_limbs)
 
             #######################################################
             ### Step (4) perform 3d pose regression

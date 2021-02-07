@@ -38,12 +38,19 @@ colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0],\
           [255, 0, 255], [255, 0, 170], [255, 0, 85]]
 
 
-
-def draw_keypoints(img, keypoints, colors=colors, radius=3):                         
+def draw_keypoints(img, keypoints, colors=colors, radius=3):
     for i in range(len(keypoints)):
         p=keypoints[i]
-        x=int(round(p[0]))
-        y=int(round(p[1]))
+
+        fx = round(p[0])
+        fy = round(p[1])
+
+        # fix nan errors in integer conversion
+        if np.isnan(fx) or np.isnan(fy):
+            continue
+
+        x=int(fx)
+        y=int(fy)
         visibility= p[2]
 
         ### Visibility flag has 3 posible values
@@ -79,12 +86,12 @@ def draw_limbs(img, keypoints_, limbList_, colors=colors):
     return rt
 
 
-def load_mat_img(imgPath):                                                                     
+def load_mat_img(imgPath):
     # Images in mat format are normally in milimeters
     try:
         img = scipy.io.loadmat(imgPath)
         img = img['depth']
-                                                                                               
+
         if img.dtype!= np.float32:
             img= img.astype(np.float32)
 
@@ -93,11 +100,11 @@ def load_mat_img(imgPath):
 
     except:
         print('[ERROR] Image could not be loaded! Something went wrong:', sys.exc_info()[0])
-        raise 
+        raise
 
 
 
-def convert_to_uchar(img, farPlane):                                                           
+def convert_to_uchar(img, farPlane):
     charImg = clip_depth_image(img, farPlane)
     resFactor = 255.0/farPlane
     charImg = charImg*resFactor
@@ -114,7 +121,7 @@ def clip_depth_image(img, farPlane=8.0):
     return clipMat
 
 
-def load_depth_image(imgPath):                                                                       
+def load_depth_image(imgPath):
     imgExt = imgPath.split('/')[-1].split('.')[-1]
 
     try:
@@ -137,7 +144,7 @@ def load_depth_image(imgPath):
         elif imgExt == 'npy':
             img = np.load(imgPath)
             img = np.array(img, dtype=np.float32)
-            img = img/1000.0 # Transforming into meters                                        
+            img = img/1000.0 # Transforming into meters
             return img
 
         elif imgExt == 'tif' or imgExt == 'tiff':
@@ -228,7 +235,7 @@ def ITOP_lift_point(x,y, depth, matrix_calibration):
     return [float(X),float(Y),float(Z)]
 
 
-def PAN_lift_point(x,y, depth, matrix_calibration):                                                             
+def PAN_lift_point(x,y, depth, matrix_calibration):
     Z= depth[y,x]
     K= matrix_calibration
     fx= K[0,0]
@@ -271,7 +278,7 @@ class DepthNormalization:
 
       trans= trans.astype(np.float32)
 
-      return trans  
+      return trans
 
 
 
@@ -288,7 +295,7 @@ class ResizeImage:
         img_= cv2.resize(img, (w,h), interpolation=cv2.INTER_CUBIC)
 
         return img_
-        
+
 
 class ToTensor:
     def __call__(self, np_img):
@@ -374,7 +381,7 @@ class SkeletonUtils:
                                [13,[]]]
 
         self.bone_names=['Head', 'Torso',
-                         'L_Hip', 'L_Leg', 'L_Chin', 'L_Shoulder', 'L_Arm', 'L_ForeArm', 
+                         'L_Hip', 'L_Leg', 'L_Chin', 'L_Shoulder', 'L_Arm', 'L_ForeArm',
                          'R_Hip', 'R_Leg', 'R_Chin', 'R_Shoulder', 'R_Arm', 'R_ForeArm']
 
 
@@ -386,15 +393,15 @@ class SkeletonUtils:
                           'L_Knee':12,'R_Foot':13, 'L_Foot':14}
 
 
-        self.children_list=[['Head'      , []], 
-                            ['Neck'      , ['R_Shoulder','L_Shoulder','Head']], 
-                            ['R_Shoulder', ['R_Elbow']], 
+        self.children_list=[['Head'      , []],
+                            ['Neck'      , ['R_Shoulder','L_Shoulder','Head']],
+                            ['R_Shoulder', ['R_Elbow']],
                             ['L_Shoulder', ['L_Elbow']],
                             ['R_Elbow'   , ['R_Hand']],
                             ['L_Elbow'   , ['L_Hand']],
                             ['R_Hand'    , []],
                             ['L_Hand'    , []],
-                            ['Torso'     , ['R_Hip','L_Hip','Neck']], 
+                            ['Torso'     , ['R_Hip','L_Hip','Neck']],
                             ['R_Hip'     , ['R_Knee']],
                             ['L_Hip'     , ['L_Knee']],
                             ['R_Knee'    , ['R_Foot']],
@@ -405,8 +412,8 @@ class SkeletonUtils:
         self.adj_list_idx=[[(i, data[0]), [self.node_names[k] for k in data[1]]]\
                                      for i, data in enumerate(self.children_list) ]
 
-        self.graph_list=[[self.node_names[data[0]], 
-                            [self.node_names[k] for k in data[1]]] 
+        self.graph_list=[[self.node_names[data[0]],
+                            [self.node_names[k] for k in data[1]]]
                                 for data in self.children_list]
 
         self.frame_defs=[\
