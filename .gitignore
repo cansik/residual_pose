@@ -1,0 +1,4 @@
+*.pyc
+venv*
+output_dir
+img_samples
